@@ -33,7 +33,6 @@ PrimeFaces.widget.Sheet = PrimeFaces.widget.BaseWidget.extend({
 	
 	// initialize the component
 	init: function(cfg) {
-		var $this = this;
 		this._super(cfg);
 		// store off jquery wrappers 
 		this.sheetDiv = $(this.jqId);
