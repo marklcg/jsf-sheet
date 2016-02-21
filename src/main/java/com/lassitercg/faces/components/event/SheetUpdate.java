@@ -21,7 +21,7 @@ public class SheetUpdate implements Serializable {
 
     private final Object newValue;
 
-    private final int rowIndex;
+    private final Object rowKey;
 
     private final int colIndex;
 
@@ -31,7 +31,7 @@ public class SheetUpdate implements Serializable {
     public String toString() {
         if (toString == null) {
             toString = new ToStringBuilder(this).appendSuper(super.toString()).append("rowData", rowData)
-                    .append("oldValue", oldValue).append("newValue", newValue).append("rowIndex", rowIndex)
+                    .append("oldValue", oldValue).append("newValue", newValue).append("rowIndex", rowKey)
                     .append("colIndex", colIndex).toString();
         }
         return toString;
@@ -42,7 +42,7 @@ public class SheetUpdate implements Serializable {
         if (!(other instanceof SheetUpdate))
             return false;
         SheetUpdate castOther = (SheetUpdate) other;
-        return new EqualsBuilder().append(rowIndex, castOther.rowIndex).append(colIndex, castOther.colIndex).isEquals();
+        return new EqualsBuilder().append(rowKey, castOther.rowKey).append(colIndex, castOther.colIndex).isEquals();
     }
 
     private transient int hashCode;
@@ -50,7 +50,7 @@ public class SheetUpdate implements Serializable {
     @Override
     public int hashCode() {
         if (hashCode == 0) {
-            hashCode = new HashCodeBuilder().append(rowIndex).append(colIndex).toHashCode();
+            hashCode = new HashCodeBuilder().append(rowKey).append(colIndex).toHashCode();
         }
         return hashCode;
     }
@@ -58,15 +58,15 @@ public class SheetUpdate implements Serializable {
     /**
      * Constructs an instance representing a single cell update.
      *
-     * @param rowIndex the row index of the row being updated
+     * @param rowKey   the row key of the row being updated
      * @param colIndex the column index of the column being updated
      * @param rowData  the rowData associated with the row being updated
      * @param oldValue the old cell value
      * @param newValue the new cell value
      */
-    public SheetUpdate(int rowIndex, int colIndex, Object rowData,
+    public SheetUpdate(Object rowKey, int colIndex, Object rowData,
                        Object oldValue, Object newValue) {
-        this.rowIndex = rowIndex;
+        this.rowKey = rowKey;
         this.colIndex = colIndex;
         this.rowData = rowData;
         this.oldValue = oldValue;
@@ -101,12 +101,12 @@ public class SheetUpdate implements Serializable {
     }
 
     /**
-     * The rowIndex value.
+     * The rowKey value.
      *
-     * @return the rowIndex
+     * @return the rowKey
      */
-    public int getRowIndex() {
-        return rowIndex;
+    public Object getRowKey() {
+        return rowKey;
     }
 
     /**

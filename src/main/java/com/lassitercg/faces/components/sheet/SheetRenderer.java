@@ -261,6 +261,7 @@ public class SheetRenderer extends Renderer {
 
             VarBuilder options = new VarBuilder(null, true);
             options.appendProperty("type", column.getColType(), true);
+            options.appendProperty("copyable", "true", false);
             Integer width = column.getColWidth();
             if (width != null)
                 options.appendProperty("width", width.toString(), false);
@@ -273,6 +274,11 @@ public class SheetRenderer extends Renderer {
 
     /**
      * Encode the row data. Builds row data, style data and read only object.
+     * <p>
+     * TODO figure out how to clean this up without having to iterate over data
+     * more than once and still keep it thread safe (no private member field
+     * use).
+     * <p>
      *
      * @param context
      * @param sheet
@@ -282,6 +288,7 @@ public class SheetRenderer extends Renderer {
     protected void encodeData(FacesContext context, Sheet sheet, WidgetBuilder wb) throws IOException {
 
         VarBuilder vbData = new VarBuilder(null, false);
+        VarBuilder vbRowKeys = new VarBuilder(null, false);
         VarBuilder vbStyle = new VarBuilder(null, true);
         VarBuilder vbRowStyle = new VarBuilder(null, false);
         VarBuilder vbReadOnly = new VarBuilder(null, true);
@@ -289,15 +296,18 @@ public class SheetRenderer extends Renderer {
         List<Object> values = sheet.getSortedValues();
         int row = 0;
         for (Object value : values) {
-            sheet.setRowIndex(context, row);
-            encodeRow(context, vbData, vbRowStyle, vbStyle, vbReadOnly, sheet, value, row);
+            context.getExternalContext().getRequestMap().put(sheet.getVar(), value);
+            final String rowKey = sheet.getRowKeyValueAsString(context);
+            vbRowKeys.appendArrayValue(rowKey, true);
+            encodeRow(context, rowKey, vbData, vbRowStyle, vbStyle, vbReadOnly, sheet, value, row);
             row++;
         }
-        sheet.setRowIndex(context, -1);
+        sheet.setRowVar(context, null);
         wb.nativeAttr("data", vbData.closeVar().toString());
         wb.nativeAttr("styles", vbStyle.closeVar().toString());
         wb.nativeAttr("rowStyles", vbRowStyle.closeVar().toString());
         wb.nativeAttr("readOnly", vbReadOnly.closeVar().toString());
+        wb.nativeAttr("rowKeys", vbRowKeys.closeVar().toString());
     }
 
     /**
@@ -313,8 +323,8 @@ public class SheetRenderer extends Renderer {
      * @param rowIndex
      * @throws IOException
      */
-    protected void encodeRow(FacesContext context, VarBuilder vbData, VarBuilder vbRowStyle, VarBuilder vbStyle,
-                             VarBuilder vbReadOnly, Sheet sheet, Object data, int rowIndex) throws IOException {
+    protected void encodeRow(FacesContext context, String rowKey, VarBuilder vbData, VarBuilder vbRowStyle,
+                             VarBuilder vbStyle, VarBuilder vbReadOnly, Sheet sheet, Object data, int rowIndex) throws IOException {
 
         // encode rowStyle (if any)
         String rowStyleClass = sheet.getRowStyleClass();
@@ -332,7 +342,7 @@ public class SheetRenderer extends Renderer {
                 continue;
 
             // render data value
-            String value = sheet.getRenderValueForCell(context, sheet.getRowKeyValue(context), col);
+            String value = sheet.getRenderValueForCell(context, rowKey, col);
             vbRow.appendArrayValue(value, true);
 
             // custom style
@@ -442,6 +452,20 @@ public class SheetRenderer extends Renderer {
                     "cellSelect", sheet.getClientId(context), null);
             wb.callback("cellSelect", "function(source, event)",
                     behaviors.get("cellSelect").get(0).getScript(behaviorContext));
+        }
+
+        if (behaviors.containsKey("columnSelect")) {
+            ClientBehaviorContext behaviorContext = ClientBehaviorContext.createClientBehaviorContext(context, sheet,
+                    "columnSelect", sheet.getClientId(context), null);
+            wb.callback("columnSelect", "function(source, event)",
+                    behaviors.get("columnSelect").get(0).getScript(behaviorContext));
+        }
+
+        if (behaviors.containsKey("rowSelect")) {
+            ClientBehaviorContext behaviorContext = ClientBehaviorContext.createClientBehaviorContext(context, sheet,
+                    "rowSelect", sheet.getClientId(context), null);
+            wb.callback("rowSelect", "function(source, event)",
+                    behaviors.get("rowSelect").get(0).getScript(behaviorContext));
         }
 
         wb.append("}");
@@ -603,6 +627,11 @@ public class SheetRenderer extends Renderer {
     @Override
     public void decode(FacesContext context, UIComponent component) {
         final Sheet sheet = (Sheet) component;
+        // update Sheet references to work around issue with getParent sometimes
+        // being null
+        for (Column column : sheet.getColumns()) {
+            column.setSheet(sheet);
+        }
 
         // clear updates from previous decode
         sheet.getUpdates().clear();
@@ -754,16 +783,41 @@ public class SheetRenderer extends Renderer {
             Iterator<String> keys = obj.keys();
             while (keys.hasNext()) {
                 final String key = keys.next();
-                // data comes in: [row, col, oldValue, newValue]
+                // data comes in: [row, col, oldValue, newValue, rowKey]
                 JSONArray update = obj.getJSONArray(key);
-                final int row = update.getInt(0);
+                final String rowKey = update.getString(4);
                 final int col = sheet.getMappedColumn(update.getInt(1));
                 final String newValue = update.getString(3);
-                sheet.setSubmittedValue(context, row, col, newValue);
+                sheet.setSubmittedValue(context, rowKey, col, newValue);
             }
         } catch (JSONException e) {
             LOG.error("Failed parsing Ajax JSON message for cell change event: {}", e.getMessage(), e);
         }
+    }
+
+    /**
+     * Start script element.
+     * <p>
+     *
+     * @param writer
+     * @param clientId
+     * @throws IOException
+     */
+    protected void startScript(ResponseWriter writer, String clientId) throws IOException {
+        writer.startElement("script", null);
+        writer.writeAttribute("id", clientId + "_s", null);
+        writer.writeAttribute("type", "text/javascript", null);
+    }
+
+    /**
+     * Stop script element.
+     * <p>
+     *
+     * @param writer
+     * @throws IOException
+     */
+    protected void endScript(ResponseWriter writer) throws IOException {
+        writer.endElement("script");
     }
 
     /**

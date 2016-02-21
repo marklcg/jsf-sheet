@@ -72,7 +72,7 @@
 		<dependency>
 			<groupId>org.primefaces</groupId>
 			<artifactId>primefaces</artifactId>
-			<version>4.0</version>
+			<version>5.3</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>

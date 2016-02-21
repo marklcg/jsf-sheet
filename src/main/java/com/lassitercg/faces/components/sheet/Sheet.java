@@ -47,6 +47,7 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.Map.Entry;
 
+
 /**
  * Spreadsheet component wrappering the Handsontable jQuery UI component.
  *
@@ -60,9 +61,13 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
 
     public static final String EVENT_CELL_SELECT = "cellSelect";
     public static final String EVENT_CHANGE = "change";
-    public static final String FAMILY = "com.lassitercg.faces.components";
-    public static final String RENDERERTYPE = "com.lassitercg.faces.components.sheet";
-    public static final String COMPONENTTYPE = "com.lassitercg.faces.components.sheet";
+    public static final String EVENT_SORT = "sort";
+    public static final String EVENT_FILTER = "filter";
+    public static final String EVENT_COLUMN_SELECT = "columnSelect";
+    public static final String EVENT_ROW_SELECT = "rowSelect";
+    public static final String FAMILY = "com.pjm.web.faces.components";
+    public static final String RENDERERTYPE = "com.pjm.web.faces.sheet";
+    public static final String COMPONENTTYPE = "com.pjm.web.faces.sheet";
     public static final String PARTIAL_SOURCE_PARAM = "javax.faces.source";
     public static final String PARTIAL_BEHAVIOR_EVENT_PARAM = "javax.faces.behavior.event";
 
@@ -222,11 +227,6 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
     private Map<RowColIndex, Object> localValues = new HashMap<RowColIndex, Object>();
 
     /**
-     * Current row Index for iteration operations
-     */
-    private int rowIndex = -1;
-
-    /**
      * The selection data
      */
     private String selection;
@@ -252,7 +252,7 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
     /**
      * Map by row keys for values found in list
      */
-    private Map<Object, RowMap> rowMap;
+    private Map<String, Object> rowMap;
 
     @Override
     public String getFamily() {
@@ -266,7 +266,8 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
 
     @Override
     public Collection<String> getEventNames() {
-        return Arrays.asList(EVENT_CHANGE, EVENT_CELL_SELECT);
+        return Arrays.asList(EVENT_CHANGE, EVENT_CELL_SELECT, EVENT_SORT, EVENT_FILTER, EVENT_COLUMN_SELECT,
+                EVENT_ROW_SELECT);
     }
 
     @Override
@@ -287,13 +288,12 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
     /**
      * The user's custom style class to be added to the div container for the
      * sheet.
-     *
-     * @param styleClass
      */
     public String getStyleClass() {
-        Object result = getStateHelper().eval(PropertyKeys.styleClass, null);
-        if (result == null)
+        final Object result = getStateHelper().eval(PropertyKeys.styleClass, null);
+        if (result == null) {
             return null;
+        }
         return result.toString();
     }
 
@@ -313,9 +313,10 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @return the stretchH value
      */
     public String getStretchH() {
-        Object result = getStateHelper().eval(PropertyKeys.stretchH, null);
-        if (result == null)
+        final Object result = getStateHelper().eval(PropertyKeys.stretchH, null);
+        if (result == null) {
             return null;
+        }
         return result.toString();
     }
 
@@ -334,9 +335,10 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @return the emptyMessage value
      */
     public String getEmptyMessage() {
-        Object result = getStateHelper().eval(PropertyKeys.emptyMessage, null);
-        if (result == null)
+        final Object result = getStateHelper().eval(PropertyKeys.emptyMessage, null);
+        if (result == null) {
             return null;
+        }
         return result.toString();
     }
 
@@ -355,9 +357,10 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @param styleClass
      */
     public String getCurrentColClass() {
-        Object result = getStateHelper().eval(PropertyKeys.currentColClass, null);
-        if (result == null)
+        final Object result = getStateHelper().eval(PropertyKeys.currentColClass, null);
+        if (result == null) {
             return null;
+        }
         return result.toString();
     }
 
@@ -376,9 +379,10 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @param styleClass
      */
     public String getCurrentRowClass() {
-        Object result = getStateHelper().eval(PropertyKeys.currentRowClass, null);
-        if (result == null)
+        final Object result = getStateHelper().eval(PropertyKeys.currentRowClass, null);
+        if (result == null) {
             return null;
+        }
         return result.toString();
     }
 
@@ -397,9 +401,10 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @param styleClass
      */
     public String getRowStyleClass() {
-        Object result = getStateHelper().eval(PropertyKeys.rowStyleClass, null);
-        if (result == null)
+        final Object result = getStateHelper().eval(PropertyKeys.rowStyleClass, null);
+        if (result == null) {
             return null;
+        }
         return result.toString();
     }
 
@@ -458,9 +463,11 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @param parent
      */
     private void getColumns(UIComponent parent) {
-        for (UIComponent child : parent.getChildren())
-            if (child instanceof Column)
+        for (final UIComponent child : parent.getChildren()) {
+            if (child instanceof Column) {
                 columns.add((Column) child);
+            }
+        }
     }
 
     /**
@@ -487,9 +494,10 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @return
      */
     public Integer getFixedRows() {
-        Object result = getStateHelper().eval(PropertyKeys.fixedRows, null);
-        if (result == null)
+        final Object result = getStateHelper().eval(PropertyKeys.fixedRows, null);
+        if (result == null) {
             return null;
+        }
         return Integer.valueOf(result.toString());
     }
 
@@ -508,9 +516,10 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @return
      */
     public Integer getFixedCols() {
-        Object result = getStateHelper().eval(PropertyKeys.fixedCols, null);
-        if (result == null)
+        final Object result = getStateHelper().eval(PropertyKeys.fixedCols, null);
+        if (result == null) {
             return null;
+        }
         return Integer.valueOf(result.toString());
     }
 
@@ -520,8 +529,9 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @return
      */
     public List<BadUpdate> getBadUpdates() {
-        if (badUpdates == null)
+        if (badUpdates == null) {
             badUpdates = new ArrayList<BadUpdate>();
+        }
         return badUpdates;
     }
 
@@ -536,13 +546,21 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * Resets the sorting to the originally specified values (if any)
      */
     public void resetSort() {
-        ValueExpression origSortBy = (ValueExpression) getStateHelper().get(PropertyKeys.origSortBy);
-        if (origSortBy != null)
-            this.setSortByValueExpression(origSortBy);
+        final ValueExpression origSortBy = (ValueExpression) getStateHelper().get(PropertyKeys.origSortBy);
+        // Set sort by even if null to restore to initial sort order.
+        this.setSortByValueExpression(origSortBy);
 
-        String origSortOrder = (String) getStateHelper().get(PropertyKeys.origSortOrder);
-        if (origSortOrder != null)
+        final String origSortOrder = (String) getStateHelper().get(PropertyKeys.origSortOrder);
+        if (origSortOrder != null) {
             setSortOrder(origSortOrder);
+        }
+    }
+
+    /**
+     * Resets bad updates
+     */
+    public void resetBadUpdates() {
+        getBadUpdates().clear();
     }
 
     /**
@@ -551,10 +569,11 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
     public void reset() {
         resetSubmitted();
         resetSort();
+        resetBadUpdates();
         localValues.clear();
-        getBadUpdates().clear();
-        for (Column c : getColumns())
+        for (final Column c : getColumns()) {
             c.setFilterValue(null);
+        }
     }
 
     /**
@@ -564,10 +583,8 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @param col
      * @param value
      */
-    public void setSubmittedValue(FacesContext context, int row, int col, String value) {
-        // need to find row key
-        this.setRowIndex(context, row);
-        submittedValues.put(new RowColIndex(this.getRowKeyValue(context), col), value);
+    public void setSubmittedValue(FacesContext context, String rowKey, int col, String value) {
+        submittedValues.put(new RowColIndex(rowKey, col), value);
     }
 
     /**
@@ -577,7 +594,7 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @param col
      * @return
      */
-    public String getSubmittedValue(Object rowKey, int col) {
+    public String getSubmittedValue(String rowKey, int col) {
         return submittedValues.get(new RowColIndex(rowKey, col));
     }
 
@@ -588,7 +605,7 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @param col
      * @param value
      */
-    public void setLocalValue(Object rowKey, int col, Object value) {
+    public void setLocalValue(String rowKey, int col, Object value) {
         localValues.put(new RowColIndex(rowKey, col), value);
     }
 
@@ -599,46 +616,30 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @param col
      * @return
      */
-    public Object getLocalValue(Object rowKey, int col) {
+    public Object getLocalValue(String rowKey, int col) {
         return localValues.get(new RowColIndex(rowKey, col));
     }
 
     /**
-     * The current row index for iterations over the List
+     * Updates the row var for iterations over the list. The var value will be
+     * updated to the value for the specified rowKey.
+     * <p>
      *
-     * @return
+     * @param context the FacesContext against which to the row var is set.
+     *                Passed for performance
+     * @param rowKey  the rowKey string
      */
-    public int getRowIndex() {
-        return rowIndex;
-    }
+    public void setRowVar(FacesContext context, String rowKey) {
 
-    /**
-     * Updates the row index for iterations over the list. The var value will be
-     * update
-     *
-     * @param context  the FacesContext against which to the row var is set. Passed
-     *                 for performance
-     * @param rowIndex
-     */
-    public void setRowIndex(FacesContext context, int rowIndex) {
-        if (this.rowIndex != rowIndex) {
-            this.rowIndex = rowIndex;
+        if (context == null) {
+            return;
+        }
 
-            if (context == null)
-                return;
-
-            if (rowIndex < 0) {
-                context.getExternalContext().getRequestMap().remove(getVar());
-            } else {
-                final List<Object> values = this.getSortedValues();
-                if (values == null)
-                    return;
-
-                Object value = null;
-                if (rowIndex < values.size())
-                    value = values.get(rowIndex);
-                context.getExternalContext().getRequestMap().put(getVar(), value);
-            }
+        if (rowKey == null) {
+            context.getExternalContext().getRequestMap().remove(getVar());
+        } else {
+            final Object value = rowMap.get(rowKey);
+            context.getExternalContext().getRequestMap().put(getVar(), value);
         }
     }
 
@@ -651,15 +652,15 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @param col
      * @return
      */
-    public Object getValueForCell(FacesContext context, Object rowKey, int col) {
+    public Object getValueForCell(FacesContext context, String rowKey, int col) {
         // if we have a local value, use it
         // note: can't check for null, as null may be the submitted value
-        RowColIndex index = new RowColIndex(rowKey, col);
-        if (localValues.containsKey(index))
+        final RowColIndex index = new RowColIndex(rowKey, col);
+        if (localValues.containsKey(index)) {
             return localValues.get(index);
+        }
 
-        RowMap map = rowMap.get(rowKey);
-        setRowIndex(context, map.sortedIndex);
+        setRowVar(context, rowKey);
         final Column column = getColumns().get(col);
         return column.getValueExpression("value").getValue(context.getELContext());
     }
@@ -673,24 +674,27 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @param col
      * @return
      */
-    public String getRenderValueForCell(FacesContext context, Object rowKey, int col) {
+    public String getRenderValueForCell(FacesContext context, String rowKey, int col) {
 
         // if we have a submitted value still, use it
         // note: can't check for null, as null may be the submitted value
-        RowColIndex index = new RowColIndex(rowKey, col);
-        if (submittedValues.containsKey(index))
+        final RowColIndex index = new RowColIndex(rowKey, col);
+        if (submittedValues.containsKey(index)) {
             return submittedValues.get(index);
+        }
 
-        Object value = getValueForCell(context, rowKey, col);
-        if (value == null)
+        final Object value = getValueForCell(context, rowKey, col);
+        if (value == null) {
             return null;
+        }
 
         final Column column = getColumns().get(col);
-        Converter converter = ComponentUtils.getConverter(context, column);
-        if (converter == null)
+        final Converter converter = ComponentUtils.getConverter(context, column);
+        if (converter == null) {
             return value.toString();
-        else
+        } else {
             return converter.getAsString(context, this, value);
+        }
     }
 
     /**
@@ -699,9 +703,10 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @return
      */
     public Integer getSelectedColumn() {
-        Object result = getStateHelper().eval(PropertyKeys.selectedColumn);
-        if (result == null)
+        final Object result = getStateHelper().eval(PropertyKeys.selectedColumn);
+        if (result == null) {
             return null;
+        }
         return Integer.valueOf(result.toString());
     }
 
@@ -720,9 +725,10 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @return
      */
     public Integer getSelectedLastColumn() {
-        Object result = getStateHelper().eval(PropertyKeys.selectedLastColumn);
-        if (result == null)
+        final Object result = getStateHelper().eval(PropertyKeys.selectedLastColumn);
+        if (result == null) {
             return null;
+        }
         return Integer.valueOf(result.toString());
     }
 
@@ -741,9 +747,10 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @return
      */
     public Integer getSelectedRow() {
-        Object result = getStateHelper().eval(PropertyKeys.selectedRow);
-        if (result == null)
+        final Object result = getStateHelper().eval(PropertyKeys.selectedRow);
+        if (result == null) {
             return null;
+        }
         return Integer.valueOf(result.toString());
     }
 
@@ -753,9 +760,10 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @return
      */
     public Integer getSelectedLastRow() {
-        Object result = getStateHelper().eval(PropertyKeys.selectedLastRow);
-        if (result == null)
+        final Object result = getStateHelper().eval(PropertyKeys.selectedLastRow);
+        if (result == null) {
             return null;
+        }
         return Integer.valueOf(result.toString());
     }
 
@@ -783,9 +791,10 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @return
      */
     public Integer getWidth() {
-        Object result = getStateHelper().eval(PropertyKeys.width);
-        if (result == null)
+        final Object result = getStateHelper().eval(PropertyKeys.width);
+        if (result == null) {
             return null;
+        }
         // this will handle any type so long as its convertable to integer
         return Integer.valueOf(result.toString());
     }
@@ -806,9 +815,10 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @return
      */
     public Integer getHeight() {
-        Object result = getStateHelper().eval(PropertyKeys.height);
-        if (result == null)
+        final Object result = getStateHelper().eval(PropertyKeys.height);
+        if (result == null) {
             return null;
+        }
         // this will handle any type so long as its convertable to integer
         return Integer.valueOf(result.toString());
     }
@@ -837,8 +847,9 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @return
      */
     public List<Object> getSortedValues() {
-        if (sortedList == null)
+        if (sortedList == null) {
             sortAndFilter();
+        }
         return sortedList;
     }
 
@@ -850,20 +861,23 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @return
      */
     public int getSortColRenderIndex() {
-        ValueExpression veSortBy = getValueExpression(PropertyKeys.sortBy.name());
-        if (veSortBy == null)
+        final ValueExpression veSortBy = getValueExpression(PropertyKeys.sortBy.name());
+        if (veSortBy == null) {
             return -1;
+        }
 
         final String sortByExp = veSortBy.getExpressionString();
         int colIdx = 0;
-        for (Column column : getColumns()) {
-            if (!column.isRendered())
+        for (final Column column : getColumns()) {
+            if (!column.isRendered()) {
                 continue;
+            }
 
-            ValueExpression veCol = column.getValueExpression(PropertyKeys.sortBy.name());
+            final ValueExpression veCol = column.getValueExpression(PropertyKeys.sortBy.name());
             if (veCol != null) {
-                if (veCol.getExpressionString().equals(sortByExp))
+                if (veCol.getExpressionString().equals(sortByExp)) {
                     return colIdx;
+                }
             }
             colIdx++;
         }
@@ -878,23 +892,26 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @return
      */
     protected boolean matchesFilter(Object obj) {
-        for (Column col : getColumns()) {
-            String filterValue = col.getFilterValue();
-            if (StringUtils.isEmpty(filterValue))
+        for (final Column col : getColumns()) {
+            final String filterValue = col.getFilterValue();
+            if (StringUtils.isEmpty(filterValue)) {
                 continue;
+            }
 
-            Object filterBy = col.getFilterBy();
+            final Object filterBy = col.getFilterBy();
             // if we have a filter, but no value in the row, no match
-            if (filterBy == null)
+            if (filterBy == null) {
                 return false;
+            }
 
             // case-insensitive
-            String compareA = filterBy.toString().toLowerCase();
-            String compareB = filterValue.toLowerCase();
+            final String compareA = filterBy.toString().toLowerCase();
+            final String compareB = filterValue.toLowerCase();
 
             // TODO need to support match modes
-            if (!compareA.contains(compareB))
+            if (!compareA.contains(compareB)) {
                 return false;
+            }
         }
         return true;
     }
@@ -905,60 +922,63 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
     @SuppressWarnings("unchecked")
     public void sortAndFilter() {
         sortedList = new ArrayList<Object>();
-        rowMap = new HashMap<Object, RowMap>();
+        rowMap = new HashMap<String, Object>();
 
-        Collection<?> values = (Collection<?>) getValue();
-        if (values == null || values.isEmpty())
+        final Collection<?> values = (Collection<?>) getValue();
+        if (values == null || values.isEmpty()) {
             return;
+        }
+
+        reMapRows();
 
         boolean filters = false;
-        for (Column col : getColumns())
+        for (final Column col : getColumns()) {
             if (StringUtils.isNotEmpty(col.getFilterValue())) {
                 filters = true;
                 break;
             }
+        }
 
-        FacesContext context = FacesContext.getCurrentInstance();
-        Map<String, Object> requestMap = context.getExternalContext().getRequestMap();
+        final FacesContext context = FacesContext.getCurrentInstance();
+        final Map<String, Object> requestMap = context.getExternalContext().getRequestMap();
 
         if (filters) {
             // iterate and add those matching the filters
-            String var = getVar();
-            for (Object obj : values) {
+            final String var = getVar();
+            for (final Object obj : values) {
                 requestMap.put(var, obj);
                 try {
-                    if (matchesFilter(obj))
+                    if (matchesFilter(obj)) {
                         sortedList.add(obj);
+                    }
                 } finally {
                     requestMap.remove(var);
                 }
             }
-        } else
+        } else {
             sortedList.addAll(values);
+        }
 
-        ValueExpression veSortBy = this.getValueExpression(PropertyKeys.sortBy.name());
-        if (veSortBy != null)
-            Collections.sort(sortedList, new BeanPropertyComparator(veSortBy, getVar(), convertSortOrder(), null));
+        final ValueExpression veSortBy = this.getValueExpression(PropertyKeys.sortBy.name());
+        if (veSortBy != null) {
+            Collections.sort(sortedList, new BeanPropertyComparator(veSortBy, getVar(), convertSortOrder(), null, false,
+                    Locale.ENGLISH, 0));
+        }
 
-        reMapRows();
     }
 
     /**
      * Remaps the row keys to the sorted and filtered list.
      */
     protected void reMapRows() {
-        FacesContext context = FacesContext.getCurrentInstance();
-        Map<String, Object> requestMap = context.getExternalContext().getRequestMap();
-
-        for (int i = 0; i < sortedList.size(); i++) {
-            Object obj = sortedList.get(i);
-            String var = getVar();
+        final FacesContext context = FacesContext.getCurrentInstance();
+        final Map<String, Object> requestMap = context.getExternalContext().getRequestMap();
+        final Collection<?> values = (Collection<?>) getValue();
+        final String var = getVar();
+        for (final Object obj : values) {
             requestMap.put(var, obj);
             try {
-                RowMap map = new RowMap();
-                map.sortedIndex = i;
-                map.value = obj;
-                rowMap.put(getRowKeyValue(context), map);
+                rowMap.put(getRowKeyValueAsString(context), obj);
             } finally {
                 requestMap.remove(var);
             }
@@ -972,13 +992,41 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @return a row key value or null if the expression is not set
      */
     protected Object getRowKeyValue(FacesContext context) {
-        ValueExpression veRowKey = getValueExpression(PropertyKeys.rowKey.name());
-        if (veRowKey == null)
+        final ValueExpression veRowKey = getValueExpression(PropertyKeys.rowKey.name());
+        if (veRowKey == null) {
             throw new RuntimeException("RowKey required on sheet!");
-        Object value = veRowKey.getValue(context.getELContext());
-        if (value == null)
-            throw new RuntimeException("RowKey must resolve to non-null valkue for updates to work properly");
+        }
+        final Object value = veRowKey.getValue(context.getELContext());
+        if (value == null) {
+            throw new RuntimeException("RowKey must resolve to non-null value for updates to work properly");
+        }
         return value;
+    }
+
+    /**
+     * Gets the row key value as a String suitable for use in javascript
+     * rendering.
+     * <p>
+     *
+     * @param context
+     * @return
+     */
+    protected String getRowKeyValueAsString(Object key) {
+        // TODO for now just use toString and remove spaces/etc, but in future
+        // we'll want to revisit this to support complex key objects
+        final String result = key.toString();
+        return "r_" + StringUtils.deleteWhitespace(result);
+    }
+
+    /**
+     * Gets the row key value as a string for the current row var.
+     * <p>
+     *
+     * @param context
+     * @return
+     */
+    protected String getRowKeyValueAsString(FacesContext context) {
+        return getRowKeyValueAsString(getRowKeyValue(context));
     }
 
     /**
@@ -987,11 +1035,11 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @return
      */
     protected SortOrder convertSortOrder() {
-        String sortOrder = getSortOrder();
-        if (sortOrder == null)
+        final String sortOrder = getSortOrder();
+        if (sortOrder == null) {
             return SortOrder.UNSORTED;
-        else {
-            SortOrder result = SortOrder.valueOf(sortOrder.toUpperCase(Locale.ENGLISH));
+        } else {
+            final SortOrder result = SortOrder.valueOf(sortOrder.toUpperCase(Locale.ENGLISH));
             return result;
         }
     }
@@ -1033,7 +1081,7 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @return
      */
     public ValueExpression getSortByValueExpression() {
-        ValueExpression veSortBy = getValueExpression(PropertyKeys.sortBy.name());
+        final ValueExpression veSortBy = getValueExpression(PropertyKeys.sortBy.name());
         return veSortBy;
     }
 
@@ -1045,10 +1093,12 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
     public void setSortByValueExpression(ValueExpression sortBy) {
         // when updating, make sure we store off the original so it may be
         // restored
-        ValueExpression orig = (ValueExpression) getStateHelper().get(PropertyKeys.origSortBy);
-        if (orig == null) {
-            getStateHelper().put(PropertyKeys.origSortBy, getSortByValueExpression());
-        }
+        // ValueExpression orig = (ValueExpression)
+        // getStateHelper().get(PropertyKeys.origSortBy);
+        // if (orig == null) {
+        // getStateHelper().put(PropertyKeys.origSortBy,
+        // getSortByValueExpression());
+        // }
         setValueExpression(PropertyKeys.sortBy.name(), sortBy);
     }
 
@@ -1059,7 +1109,7 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      */
     public String getSortOrder() {
         // if we have a toggled sort in our state, use it
-        String result = (String) getStateHelper().eval(PropertyKeys.sortOrder, SortOrder.ASCENDING.toString());
+        final String result = (String) getStateHelper().eval(PropertyKeys.sortOrder, SortOrder.ASCENDING.toString());
         return result;
     }
 
@@ -1071,12 +1121,12 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
     public void setSortOrder(java.lang.String sortOrder) {
         // when updating, make sure we store off the original so it may be
         // restored
-        String orig = (String) getStateHelper().get(PropertyKeys.origSortOrder);
-        if (orig == null)
-            // do not call getSortOrder as it defaults to ascending, we want
-            // null
+        final String orig = (String) getStateHelper().get(PropertyKeys.origSortOrder);
+        if (orig == null) {
+            // do not call getSortOrder as it defaults to ascending, we want null
             // if this is the first call and there is no previous value.
             getStateHelper().put(PropertyKeys.origSortOrder, getStateHelper().eval(PropertyKeys.sortOrder));
+        }
         getStateHelper().put(PropertyKeys.sortOrder, sortOrder);
     }
 
@@ -1086,9 +1136,10 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @return
      */
     public String getErrorMessage() {
-        Object result = getStateHelper().eval(PropertyKeys.errorMessage);
-        if (result == null)
+        final Object result = getStateHelper().eval(PropertyKeys.errorMessage);
+        if (result == null) {
             return null;
+        }
         return result.toString();
     }
 
@@ -1117,30 +1168,29 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
         // data type. For successful values, remove from submitted and add to
         // local values map. for failures, add a conversion message and leave in
         // the submitted state
-        Iterator<Entry<RowColIndex, String>> entries = submittedValues.entrySet().iterator();
-        boolean hadBadUpdates = !getBadUpdates().isEmpty();
+        final Iterator<Entry<RowColIndex, String>> entries = submittedValues.entrySet().iterator();
+        final boolean hadBadUpdates = !getBadUpdates().isEmpty();
         getBadUpdates().clear();
         while (entries.hasNext()) {
             final Entry<RowColIndex, String> entry = entries.next();
             final Column column = getColumns().get(entry.getKey().colIndex);
             final String newValue = entry.getValue();
-            final Object rowKey = entry.getKey().getRowKey();
+            final String rowKey = entry.getKey().getRowKey();
             final int col = entry.getKey().getColIndex();
-            final RowMap map = rowMap.get(rowKey);
-            this.setRowIndex(context, map.sortedIndex);
+            setRowVar(context, rowKey);
 
             // attempt to convert new value from string to correct object type
             // based on column converter. Use PF util as helper
-            Converter converter = ComponentUtils.getConverter(context, column);
+            final Converter converter = ComponentUtils.getConverter(context, column);
 
             // assume string value if converter not found
             Object newValueObj = newValue;
-            if (converter != null)
+            if (converter != null) {
                 try {
                     newValueObj = converter.getAsObject(context, this, newValue);
-                } catch (ConverterException e) {
+                } catch (final ConverterException e) {
                     // add offending cell to list of bad updates
-                    // and to a stringbuffer for error messages (so we have one
+                    // and to a StringBuilder for error messages (so we have one
                     // message for the component)
                     setValid(false);
                     FacesMessage message = e.getFacesMessage();
@@ -1149,11 +1199,11 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
                     }
                     context.addMessage(this.getClientId(context), message);
 
-                    String messageText = message.getDetail();
-                    this.getBadUpdates()
-                            .add(new BadUpdate(getRowKeyValue(context), col, column, newValue, messageText));
+                    final String messageText = message.getDetail();
+                    this.getBadUpdates().add(new BadUpdate(getRowKeyValue(context), col, column, newValue, messageText));
                     continue;
                 }
+            }
             // value is fine, no further validations (again, not to be confused
             // with validators. until we have a "required" or something like
             // that, nothing else to do).
@@ -1169,21 +1219,20 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
 
             entries.remove();
         }
-        this.setRowIndex(context, -1);
+        setRowVar(context, null);
 
         final boolean newBadUpdates = !getBadUpdates().isEmpty();
-        String errorMessage = this.getErrorMessage();
+        final String errorMessage = this.getErrorMessage();
 
         if (hadBadUpdates || newBadUpdates) {
             // update the bad data var if partial request
             if (context.getPartialViewContext().isPartialRequest()) {
-                this.sortAndFilter();
                 this.renderBadUpdateScript(context);
             }
         }
 
         if (newBadUpdates && errorMessage != null) {
-            FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, errorMessage, errorMessage);
+            final FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, errorMessage, errorMessage);
             context.addMessage(null, message);
         }
     }
@@ -1200,37 +1249,34 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      */
     @Override
     public void updateModel(FacesContext context) {
-        Iterator<Entry<RowColIndex, Object>> entries = localValues.entrySet().iterator();
+        final Iterator<Entry<RowColIndex, Object>> entries = localValues.entrySet().iterator();
         // Keep track of the dirtied rows for ajax callbacks so we can send
         // updates on what was touched
-        HashSet<Object> dirtyRows = new HashSet<Object>();
+        final HashSet<String> dirtyRows = new HashSet<String>();
         while (entries.hasNext()) {
             final Entry<RowColIndex, Object> entry = entries.next();
 
             final Object newValue = entry.getValue();
-            final Object rowKey = entry.getKey().getRowKey();
+            final String rowKey = entry.getKey().getRowKey();
             final int col = entry.getKey().getColIndex();
             final Column column = getColumns().get(col);
-            final RowMap map = rowMap.get(rowKey);
-            this.setRowIndex(context, map.sortedIndex);
+            setRowVar(context, rowKey);
+            final Object rowVal = rowMap.get(rowKey);
 
-            System.out.println("Local key=" + rowKey + " and sortedRow is " + map.sortedIndex);
-
-            ValueExpression ve = column.getValueExpression(PropertyKeys.value.name());
-            ELContext elContext = context.getELContext();
-            Object oldValue = ve.getValue(elContext);
+            final ValueExpression ve = column.getValueExpression(PropertyKeys.value.name());
+            final ELContext elContext = context.getELContext();
+            final Object oldValue = ve.getValue(elContext);
             ve.setValue(elContext, newValue);
             entries.remove();
-            appendUpdateEvent(map.sortedIndex, col, map.value, oldValue, newValue);
+            appendUpdateEvent(this.getRowKeyValue(context), col, rowVal, oldValue, newValue);
             dirtyRows.add(rowKey);
         }
         setLocalValueSet(false);
-        setRowIndex(context, -1);
+        setRowVar(context, null);
 
-        this.sortAndFilter();
-
-        if (context.getPartialViewContext().isPartialRequest())
+        if (context.getPartialViewContext().isPartialRequest()) {
             this.renderRowUpdateScript(context, dirtyRows);
+        }
     }
 
     /**
@@ -1238,7 +1284,7 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      */
     @Override
     public Object saveState(FacesContext context) {
-        Object values[] = new Object[7];
+        final Object values[] = new Object[7];
         values[0] = super.saveState(context);
         values[1] = submittedValues;
         values[2] = localValues;
@@ -1256,47 +1302,54 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
     @SuppressWarnings("unchecked")
     @Override
     public void restoreState(FacesContext context, Object state) {
-        if (state == null)
+        if (state == null) {
             return;
+        }
 
-        Object values[] = (Object[]) state;
+        final Object values[] = (Object[]) state;
         super.restoreState(context, values[0]);
-        Object restoredSubmittedValues = values[1];
-        Object restoredLocalValues = values[2];
-        Object restoredBadUpdates = values[3];
-        Object restoredColMappings = values[4];
-        Object restoredSortedList = values[5];
-        Object restoredRowMap = values[6];
+        final Object restoredSubmittedValues = values[1];
+        final Object restoredLocalValues = values[2];
+        final Object restoredBadUpdates = values[3];
+        final Object restoredColMappings = values[4];
+        final Object restoredSortedList = values[5];
+        final Object restoredRowMap = values[6];
 
-        if (restoredSubmittedValues == null)
+        if (restoredSubmittedValues == null) {
             submittedValues.clear();
-        else
+        } else {
             submittedValues = (Map<RowColIndex, String>) restoredSubmittedValues;
+        }
 
-        if (restoredLocalValues == null)
+        if (restoredLocalValues == null) {
             localValues.clear();
-        else
+        } else {
             localValues = (Map<RowColIndex, Object>) restoredLocalValues;
+        }
 
-        if (restoredBadUpdates == null)
+        if (restoredBadUpdates == null) {
             badUpdates.clear();
-        else
+        } else {
             badUpdates = (List<BadUpdate>) restoredBadUpdates;
+        }
 
-        if (restoredColMappings == null)
+        if (restoredColMappings == null) {
             columnMapping = null;
-        else
+        } else {
             columnMapping = (Map<Integer, Integer>) restoredColMappings;
+        }
 
-        if (restoredSortedList == null)
+        if (restoredSortedList == null) {
             sortedList = null;
-        else
+        } else {
             sortedList = (List<Object>) restoredSortedList;
+        }
 
-        if (restoredRowMap == null)
+        if (restoredRowMap == null) {
             rowMap = null;
-        else
-            rowMap = (Map<Object, RowMap>) restoredRowMap;
+        } else {
+            rowMap = (Map<String, Object>) restoredRowMap;
+        }
     }
 
     /**
@@ -1324,10 +1377,11 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      */
     @Override
     public Object getSubmittedValue() {
-        if (this.submittedValues.isEmpty())
+        if (submittedValues.isEmpty()) {
             return null;
-        else
-            return (this.submittedValues);
+        } else {
+            return (submittedValues);
+        }
     }
 
     /*
@@ -1340,10 +1394,11 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
     @SuppressWarnings("unchecked")
     @Override
     public void setSubmittedValue(Object submittedValue) {
-        if (submittedValue == null)
+        if (submittedValue == null) {
             submittedValues.clear();
-        else
+        } else {
             submittedValues = (Map<RowColIndex, String>) submittedValue;
+        }
 
     }
 
@@ -1365,8 +1420,8 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @param oldValue
      * @param newValue
      */
-    protected void appendUpdateEvent(int rowIndex, int colIndex, Object rowData, Object oldValue, Object newValue) {
-        updates.add(new SheetUpdate(rowIndex, colIndex, rowData, oldValue, newValue));
+    protected void appendUpdateEvent(Object rowKey, int colIndex, Object rowData, Object oldValue, Object newValue) {
+        updates.add(new SheetUpdate(rowKey, colIndex, rowData, oldValue, newValue));
     }
 
     /**
@@ -1375,9 +1430,11 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @return
      */
     public boolean isHasStyledCells() {
-        for (Column column : getColumns())
-            if (column.getStyleClass() != null)
+        for (final Column column : getColumns()) {
+            if (column.getStyleClass() != null) {
                 return true;
+            }
+        }
         return false;
     }
 
@@ -1388,12 +1445,13 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @return the mapped index
      */
     public int getMappedColumn(int renderIdx) {
-        if (columnMapping == null) {
+        if (columnMapping == null || renderIdx == -1) {
             return renderIdx;
         } else {
-            Integer result = columnMapping.get(renderIdx);
-            if (result == null)
+            final Integer result = columnMapping.get(renderIdx);
+            if (result == null) {
                 throw new IllegalArgumentException("Invalid index " + renderIdx);
+            }
             return result;
         }
     }
@@ -1405,13 +1463,15 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @return
      */
     public int getRenderIndexFromRealIdx(int realIdx) {
-        if (columnMapping == null) {
+        if (columnMapping == null || realIdx == -1) {
             return realIdx;
         }
 
-        for (Entry<Integer, Integer> entry : columnMapping.entrySet())
-            if (entry.getValue().equals(realIdx))
+        for (final Entry<Integer, Integer> entry : columnMapping.entrySet()) {
+            if (entry.getValue().equals(realIdx)) {
                 return entry.getKey();
+            }
+        }
 
         return realIdx;
     }
@@ -1423,7 +1483,7 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
         columnMapping = new HashMap<Integer, Integer>();
         int realIdx = 0;
         int renderIdx = 0;
-        for (Column column : getColumns()) {
+        for (final Column column : getColumns()) {
             if (column.isRendered()) {
                 columnMapping.put(renderIdx, realIdx);
                 renderIdx++;
@@ -1438,9 +1498,10 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @return
      */
     public int getRowCount() {
-        List<Object> values = getSortedValues();
-        if (values == null)
+        final List<Object> values = getSortedValues();
+        if (values == null) {
             return 0;
+        }
         return values.size();
     }
 
@@ -1470,11 +1531,11 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      */
     public void commitUpdates() {
         resetSubmitted();
-        FacesContext context = FacesContext.getCurrentInstance();
+        final FacesContext context = FacesContext.getCurrentInstance();
         if (context.getPartialViewContext().isPartialRequest()) {
-            StringBuffer eval = new StringBuffer();
-            String jQueryId = this.getClientId().replace(":", "\\\\:");
-            String jsDeltaVar = this.getClientId().replace(":", "_") + "_delta";
+            final StringBuilder eval = new StringBuilder();
+            final String jQueryId = this.getClientId().replace(":", "\\\\:");
+            final String jsDeltaVar = this.getClientId().replace(":", "_") + "_delta";
 
             eval.append("$('#");
             eval.append(jQueryId);
@@ -1492,13 +1553,12 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @return
      */
     public String getBadDataValue() {
-        VarBuilder vb = new VarBuilder(null, true);
-        for (BadUpdate badUpdate : getBadUpdates()) {
+        final VarBuilder vb = new VarBuilder(null, true);
+        for (final BadUpdate badUpdate : getBadUpdates()) {
             final Object rowKey = badUpdate.getBadRowKey();
             final int col = getRenderIndexFromRealIdx(badUpdate.getBadColIndex());
-            RowMap map = rowMap.get(rowKey);
-            System.out.println("RowMap is " + map.sortedIndex + " for key " + rowKey);
-            vb.appendRowColProperty(map.sortedIndex, col, badUpdate.getBadMessage().replace("'", "&apos;"), true);
+            final String rowKeyProperty = this.getRowKeyValueAsString(rowKey);
+            vb.appendProperty(rowKeyProperty + "_c" + col, badUpdate.getBadMessage().replace("'", "&apos;"), true);
         }
         return vb.closeVar().toString();
     }
@@ -1510,32 +1570,32 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @param context   the FacesContext
      * @param dirtyRows the set of dirty rows
      */
-    protected void renderRowUpdateScript(FacesContext context, Set<Object> dirtyRows) {
-        String jsVar = this.resolveWidgetVar();
-        StringBuilder eval = new StringBuilder();
+    protected void renderRowUpdateScript(FacesContext context, Set<String> dirtyRows) {
+        final String jsVar = this.resolveWidgetVar();
+        final StringBuilder eval = new StringBuilder();
 
-        for (Object rowKey : dirtyRows) {
-            RowMap map = this.rowMap.get(rowKey);
-            setRowIndex(context, map.sortedIndex);
+        for (final String rowKey : dirtyRows) {
+            setRowVar(context, rowKey);
             // data is array of array of data
-            VarBuilder vbRow = new VarBuilder(null, false);
+            final VarBuilder vbRow = new VarBuilder(null, false);
             for (int col = 0; col < getColumns().size(); col++) {
                 final Column column = getColumns().get(col);
-                if (!column.isRendered())
+                if (!column.isRendered()) {
                     continue;
+                }
 
                 // render data value
-                String value = getRenderValueForCell(context, rowKey, col);
+                final String value = getRenderValueForCell(context, rowKey, col);
                 vbRow.appendArrayValue(value, true);
             }
-            eval.append(jsVar);
-            eval.append(".cfg.data[");
-            eval.append(Integer.toString(map.sortedIndex));
-            eval.append("]=");
+            eval.append("PF('" + jsVar + "')");
+            eval.append(".updateData('");
+            eval.append(rowKey);
+            eval.append("',");
             eval.append(vbRow.closeVar().toString());
-            eval.append(";");
+            eval.append(");");
         }
-        eval.append(jsVar);
+        eval.append("PF('" + jsVar + "')");
         eval.append(".ht.render();");
         RequestContext.getCurrentInstance().getScriptsToExecute().add(eval.toString());
     }
@@ -1547,32 +1607,34 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
      * @param context the FacesContext
      */
     protected void renderBadUpdateScript(FacesContext context) {
-        String widgetVar = this.resolveWidgetVar();
-        String badDataVar = this.getBadDataValue();
-        StringBuffer sb = new StringBuffer(widgetVar);
+        final String widgetVar = this.resolveWidgetVar();
+        final String badDataVar = this.getBadDataValue();
+        StringBuilder sb = new StringBuilder("PF('" + widgetVar + "')");
         sb.append(".cfg.errors=");
         sb.append(badDataVar);
         sb.append(";");
-        sb.append(widgetVar);
+        sb.append("PF('" + widgetVar + "')");
         sb.append(".ht.render();");
         RequestContext.getCurrentInstance().getScriptsToExecute().add(sb.toString());
 
-        sb = new StringBuffer();
-        sb.append(widgetVar);
+        sb = new StringBuilder();
+        sb.append("PF('" + widgetVar + "')");
         sb.append(".sheetDiv.removeClass('ui-state-error')");
-        if (!getBadUpdates().isEmpty())
+        if (!getBadUpdates().isEmpty()) {
             sb.append(".addClass('ui-state-error')");
+        }
         RequestContext.getCurrentInstance().getScriptsToExecute().add(sb.toString());
     }
 
     @Override
     public String resolveWidgetVar() {
-        FacesContext context = FacesContext.getCurrentInstance();
-        String userWidgetVar = (String) getAttributes().get("widgetVar");
-        if (userWidgetVar != null)
+        final FacesContext context = FacesContext.getCurrentInstance();
+        final String userWidgetVar = (String) getAttributes().get("widgetVar");
+        if (userWidgetVar != null) {
             return userWidgetVar;
-        else
+        } else {
             return "widget_" + getClientId(context).replaceAll("-|" + UINamingContainer.getSeparatorChar(context), "_");
+        }
     }
 
     /**
@@ -1582,28 +1644,32 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
 
         private static final long serialVersionUID = 1L;
 
-        private final Object rowKey;
+        private final String rowKey;
         private final Integer colIndex;
 
         /**
-         * Constructs an instance of RowColIndex for the row and column
-         * specified.
+         * Constructs an instance of RowColIndex for the row and column specified.
+         * <p>
          *
-         * @param rowKey the row represented by this index
-         * @param col    the column represented by this index
+         * @param row the row represented by this index
+         * @param col the column respresented by this index
          */
-        public RowColIndex(Object rowKey, Integer col) {
+        public RowColIndex(String rowKey, Integer col) {
             this.rowKey = rowKey;
-            this.colIndex = col;
+            colIndex = col;
         }
 
+        /*
+         * (non-Javadoc)
+         * @see java.lang.Object#equals(java.lang.Object)
+         */
         @Override
         public boolean equals(final Object other) {
-            if (!(other instanceof RowColIndex))
+            if (!(other instanceof RowColIndex)) {
                 return false;
-            RowColIndex castOther = (RowColIndex) other;
-            return new EqualsBuilder().append(rowKey, castOther.rowKey).append(colIndex, castOther.colIndex)
-                    .isEquals();
+            }
+            final RowColIndex castOther = (RowColIndex) other;
+            return new EqualsBuilder().append(rowKey, castOther.rowKey).append(colIndex, castOther.colIndex).isEquals();
         }
 
         @Override
@@ -1616,7 +1682,7 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
          *
          * @return the rowIndex
          */
-        public Object getRowKey() {
+        public String getRowKey() {
             return rowKey;
         }
 
@@ -1629,14 +1695,5 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
             return colIndex;
         }
 
-    }
-
-    /**
-     * Private class used to map a row key to its object and sorted row index
-     */
-    private class RowMap implements Serializable {
-        private static final long serialVersionUID = 1L;
-        Object value;
-        int sortedIndex;
     }
 }

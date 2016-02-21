@@ -97,6 +97,11 @@ public class Column extends UIInput implements ClientBehaviorHolder {
 
     private Object localValue;
 
+    /**
+     * Sheet reference. Updated on decode.
+     */
+    private Sheet sheet;
+
     /*
      * (non-Javadoc)
      *
@@ -258,7 +263,7 @@ public class Column extends UIInput implements ClientBehaviorHolder {
     /**
      * Update the filter value for this column
      *
-     * @param filterBy
+     * @param filterValue
      */
     public void setFilterValue(String filterValue) {
         getStateHelper().put(PropertyKeys.filterValue, filterValue);
@@ -281,22 +286,35 @@ public class Column extends UIInput implements ClientBehaviorHolder {
     }
 
     /**
-     * --------------------------------------------------
-     * <p>
-     * Override UIInput methods
-     */
-
-    /**
      * Get the parent sheet
      *
      * @return
      */
-    private Sheet getSheet() {
+    public Sheet getSheet() {
+        if (sheet != null)
+            return sheet;
+
         UIComponent parent = this.getParent();
         while (parent != null && !(parent instanceof Sheet))
             parent = parent.getParent();
         return (Sheet) parent;
     }
+
+    /**
+     * Updates the sheet reference to work around getParent sometimes returning
+     * null.
+     *
+     * @param sheet the owning sheet
+     */
+    public void setSheet(Sheet sheet) {
+        this.sheet = sheet;
+    }
+
+    /**
+     * --------------------------------------------------
+     * <p>
+     * Override UIInput methods
+     */
 
     /**
      * Ignore attempts to set the local value for this column, again done by
