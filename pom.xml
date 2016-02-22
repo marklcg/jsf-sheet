@@ -21,9 +21,9 @@
 		<url>http://www.lassitercg.com</url>
 	</organization>
 	<scm>
-		<connection>scm:svn:https://jsf-sheet.googlecode.com/svn/tags/jsf-sheet-1.1</connection>
-		<developerConnection>scm:svn:https://jsf-sheet.googlecode.com/svn/tags/jsf-sheet-1.1</developerConnection>
-		<url>https://jsf-sheet.googlecode.com/svn/tags/jsf-sheet-1.1</url>
+		<connection>scm:git:git@github.com:marklcg/jsf-sheet.git</connection>
+		<developerConnection>scm:git:git@github.com:marklcg/jsf-sheet.git</developerConnection>
+		<url>https://github.com/marklcg/jsf-sheet</url>
 	</scm>
 	<licenses>
 		<license>
