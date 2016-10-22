@@ -221,7 +221,6 @@ PrimeFaces.widget.Sheet = PrimeFaces.widget.BaseWidget.extend({
             afterOnCellMouseDown: function (event, coords, TD) {
                 var sel = [coords.row, coords.col, coords.row, coords.col];
                 $this.selectionInput.val(JSON.stringify(sel));
-                console.log(sel);
 
                 // only fire event if row is -1 which means its a header
                 if ((coords.row == -1 && coords.col != -1) && $this.hasBehavior('columnSelect'))
