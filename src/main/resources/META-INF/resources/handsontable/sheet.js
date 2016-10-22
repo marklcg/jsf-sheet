@@ -33,7 +33,6 @@ PrimeFaces.widget.Sheet = PrimeFaces.widget.BaseWidget.extend({
 
     // initialize the component
     init: function (cfg) {
-        var $this = this;
         this._super(cfg);
         // store off jquery wrappers
         this.sheetDiv = $(this.jqId);
@@ -43,6 +42,8 @@ PrimeFaces.widget.Sheet = PrimeFaces.widget.BaseWidget.extend({
         this.sortByInput = $(this.jqId + '_sortby');
         this.sortOrderInput = $(this.jqId + '_sortorder');
         this.focusInput = $(this.jqId + '_focus');
+        // need to track to avoid recursion
+        this.focusing = false;
         // create table
         this.setupHandsonTable();
     },
@@ -125,10 +126,19 @@ PrimeFaces.widget.Sheet = PrimeFaces.widget.BaseWidget.extend({
     // keep track of focused filter input. if previous filter altered,
     // fire filter event
     filterFocusIn: function (sheet, inp) {
-        // destroy editor to avoid posting request after resort
-        sheet.ht.destroyEditor(true);
+        // if this call is the result of jQuery setFocus, exit
+        if (sheet.focusing)
+            return;
 
+        // destroy editor to avoid posting request after resort
+        // this causes us to lose focus, so we need to refocus
+        // we need to prevent recursion with this hack
+        sheet.focusing = true;
         sheet.focusInput.val($(inp).attr('id'));
+        sheet.ht.destroyEditor(true);
+        $(inp).focus();
+        sheet.focusing = false;
+
         if (sheet.filterChanged && sheet.hasBehavior('filter')) {
             sheet.filterChanged = false;
             sheet.cfg.behaviors['filter'].call(this, 'filter');
@@ -138,6 +148,13 @@ PrimeFaces.widget.Sheet = PrimeFaces.widget.BaseWidget.extend({
     // remove focused filter tracking when tabbing off
     filterFocusOut: function (sheet, inp) {
         sheet.focusInput.val(null);
+    },
+
+    // method to prevent selection of cells on column header click
+    handleHotBeforeOnCellMouseDown: function (event, coords, element) {
+        if (coords.row < 0) {
+            event.stopImmediatePropagation();
+        }
     },
 
     // setup the handson table
@@ -330,6 +347,12 @@ PrimeFaces.widget.Sheet = PrimeFaces.widget.BaseWidget.extend({
 
         $this.tableDiv.handsontable(options);
         $this.ht = $this.tableDiv.data('handsontable');
+
+        // prevent column clicks from selecting entire column, we use it for sort
+        // TODO may make this conditional on whether or not sorting is enabled
+        Handsontable.hooks.add('beforeOnCellMouseDown',
+            $this.handleHotBeforeOnCellMouseDown, $this.ht);
+
         // Check if data exist. If not insert No Records Found message
         if (options.data.length == 0) {
             $this.tableDiv.find('tbody')
