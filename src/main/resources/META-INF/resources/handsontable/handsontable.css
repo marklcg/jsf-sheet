@@ -1,14 +1,29 @@
 /*!
- * Handsontable 0.19.0
- * Handsontable is a JavaScript library for editable tables with basic copy-paste compatibility with Excel and Google Docs
- *
- * Copyright 2015 Handsoncode sp. z o.o. <hello@handsontable.com>
- * Licensed under the MIT license.
- * http://handsontable.com/
- *
- * Date: Fri Oct 02 2015 12:37:12 GMT+0200 (CEST)
- */
+(The MIT License)
 
+Copyright (c) 2012-2014 Marcin Warpechowski
+Copyright (c) 2015 Handsoncode sp. z o.o. <hello@handsoncode.net>
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+'Software'), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+*/
 .handsontable {
   position: relative;
 }
@@ -86,6 +101,8 @@
 
 .handsontable th,
 .handsontable td {
+  border-top-width: 0;
+  border-left-width: 0;
   border-right: 1px solid #CCC;
   border-bottom: 1px solid #CCC;
   height: 22px;
@@ -139,9 +156,8 @@
   border-top: 1px solid #CCC;
 }
 
-.ht_master:not(.innerBorderLeft) ~ .handsontable tbody tr th,
-.ht_master:not(.innerBorderLeft) ~ .handsontable:not(.ht_clone_top) thead tr th:first-child
-{
+.ht_master:not(.innerBorderLeft):not(.emptyColumns) ~ .handsontable tbody tr th,
+.ht_master:not(.innerBorderLeft):not(.emptyColumns) ~ .handsontable:not(.ht_clone_top) thead tr th:first-child {
   border-right-width: 0;
 }
 
@@ -153,7 +169,7 @@
 }
 
 .handsontable th {
-  background-color: #EEE;
+  background-color: #f3f3f3;
   color: #222;
   text-align: center;
   font-weight: normal;
@@ -167,61 +183,24 @@
 .handsontable th.active {
   background-color: #CCC;
 }
-
 .handsontable thead th .relative {
   padding: 2px 4px;
 }
 
+/* selection */
+.handsontable tbody th.ht__highlight,
+.handsontable thead th.ht__highlight {
+  background-color: #dcdcdc;
+}
+.handsontable.ht__selection--columns thead th.ht__highlight,
+.handsontable.ht__selection--rows tbody th.ht__highlight {
+  background-color: #8eb0e7;
+  color: #000;
+}
+
 /* plugins */
 
-.handsontable .manualColumnMover {
-  position: fixed;
-  left: 0;
-  top: 0;
-  background-color: transparent;
-  width: 5px;
-  height: 25px;
-  z-index: 999;
-  cursor: move;
-}
-
-.handsontable .manualRowMover {
-  position: fixed;
-  left: -4px;
-  top: 0;
-  background-color: transparent;
-  height: 5px;
-  width: 50px;
-  z-index: 999;
-  cursor: move;
-}
-
-.handsontable .manualColumnMoverGuide,
-.handsontable .manualRowMoverGuide {
-  position: fixed;
-  left: 0;
-  top: 0;
-  background-color: #CCC;
-  width: 25px;
-  height: 25px;
-  opacity: 0.7;
-  display: none;
-}
-
-.handsontable .manualColumnMoverGuide.active,
-.handsontable .manualRowMoverGuide.active {
-  display: block;
-}
-
-.handsontable .manualColumnMover:hover,
-.handsontable .manualColumnMover.active,
-.handsontable .manualRowMover:hover,
-.handsontable .manualRowMover.active{
-  background-color: #88F;
-}
-
 /* row + column resizer*/
-
 .handsontable .manualColumnResizer {
   position: fixed;
   top: 0;
@@ -272,6 +251,7 @@
 .handsontable .manualColumnResizerGuide.active,
 .handsontable .manualRowResizerGuide.active {
   display: block;
+  z-index: 199;
 }
 
 .handsontable .columnSorting {
@@ -295,39 +275,6 @@
   color: #5f5f5f;
   position: absolute;
   right: -15px;
-}
-
-.handsontable th.beforeHiddenColumn {
-  position: relative;
-}
-
-.handsontable th.beforeHiddenColumn::after,
-.handsontable th.afterHiddenColumn::before {
-  content: '\25C0';
-  color: #bbb;
-  position: absolute;
-  right: 1px;
-  top: 2px;
-  font-size: 5pt;
-}
-
-.handsontable th.afterHiddenColumn {
-  position: relative;
-}
-
-.handsontable th.afterHiddenColumn::before {
-  left: 1px;
-  top: 2px;
-  right: auto;
-  content: '\25B6';
-}
-
-.handsontable td.afterHiddenColumn.firstVisible {
-  border-left: 1px solid #CCC;
-}
-
-.handsontable thead th.hiddenHeader {
-  display: none;
 }
 
 /* border line */
@@ -475,7 +422,10 @@ AutocompleteRenderer down arrow
 /*
 CheckboxRenderer
 */
-
+.handsontable .htCheckboxRendererInput {
+  display: inline-block;
+  vertical-align: middle;
+}
 .handsontable .htCheckboxRendererInput.noValue {
   opacity: 0.5;
 }
@@ -483,14 +433,6 @@ CheckboxRenderer
   cursor: pointer;
   display: inline-block;
   width: 100%;
-}
-
-/*
-NumericRenderer
-*/
-
-.handsontable .htNumeric {
-  text-align: right;
 }
 
 /*
@@ -556,12 +498,6 @@ Comment For Cell
 .handsontable .handsontable.ht_clone_top .wtHider {
   padding: 0 0 5px 0;
 }
-
-/* removing shadows, TODO: remove the commented code and this comment  */
-/*.handsontable .handsontable:not(.ht_master) table {*/
-  /*-webkit-box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.4);*/
-  /*box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.4);*/
-/*}*/
 
 /**
 * Autocomplete Editor
@@ -669,7 +605,7 @@ Cell borders
   background-color: #FFFACD;
   border: 1px solid #999;
   box-shadow: 1px 1px 2px #bbb;
-  font-family: 'Arial';
+  font-family: sans-serif;
 }
 
 .handsontable tbody tr th:nth-last-child(2) {
@@ -764,9 +700,9 @@ thead .htCollapseButton:after {
   width: 10px;
   height: 10px;
   cursor: pointer;
-  -webkit-box-shadow: 0px 0px 0px 6px rgba(238,238,238,1);
-  -moz-box-shadow: 0px 0px 0px 6px rgba(238,238,238,1);
-  box-shadow: 0px 0px 0px 6px rgba(238,238,238,1);
+  -webkit-box-shadow: 0 0 0 6px rgba(238,238,238,1);
+  -moz-box-shadow: 0 0 0 6px rgba(238,238,238,1);
+  box-shadow: 0 0 0 6px rgba(238,238,238,1);
   background: #eee;
 }
 
@@ -1087,7 +1023,7 @@ thead .htCollapseButton:after {
 }
 
 .htContextMenu table.htCore {
-  border: 1px solid #bbb;
+  border: 1px solid #ccc;
   border-bottom-width: 2px;
   border-right-width: 2px;
 }
@@ -1117,13 +1053,14 @@ thead .htCollapseButton:after {
 
 .htContextMenu table tbody tr td.current,
 .htContextMenu table tbody tr td.zeroclipboard-is-hover {
-  background: #e9e9e9;
+  background: #f3f3f3;
 }
 
 .htContextMenu table tbody tr td.htSeparator {
   border-top: 1px solid #bbb;
   height: 0;
   padding: 0;
+  cursor: default;
 }
 
 .htContextMenu table tbody tr td.htDisabled {
@@ -1134,6 +1071,10 @@ thead .htCollapseButton:after {
   background: #fff;
   color: #999;
   cursor: default;
+}
+
+.htContextMenu table tbody tr.htHidden {
+  display: none;
 }
 
 .htContextMenu table tbody tr td .htItemWrapper {
@@ -1150,223 +1091,93 @@ thead .htCollapseButton:after {
 .htContextMenu .ht_master .wtHolder {
   overflow: hidden;
 }
-@charset "UTF-8";
-
-/*!
- * Pikaday
- * Copyright © 2014 David Bushell | BSD & MIT license | http://dbushell.com/
- */
-
-.pika-single {
-    z-index: 9999;
-    display: block;
-    position: relative;
-    color: #333;
-    background: #fff;
-    border: 1px solid #ccc;
-    border-bottom-color: #bbb;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+.htRowHeaders .ht_master.innerBorderLeft ~ .ht_clone_top_left_corner th:nth-child(2),
+.htRowHeaders .ht_master.innerBorderLeft ~ .ht_clone_left td:first-of-type {
+  border-left: 0 none;
 }
-
-/*
-clear child float (pika-lendar), using the famous micro clearfix hack
-http://nicolasgallagher.com/micro-clearfix-hack/
-*/
-.pika-single:before,
-.pika-single:after {
-    content: " ";
-    display: table;
+.handsontable .wtHider {
+  position: relative;
 }
-.pika-single:after { clear: both }
-.pika-single { *zoom: 1 }
-
-.pika-single.is-hidden {
-    display: none;
+.handsontable.ht__manualColumnMove.after-selection--columns thead th.ht__highlight {
+  cursor: move;
+  cursor: -moz-grab;
+  cursor: -webkit-grab;
+  cursor: grab;
 }
-
-.pika-single.is-bound {
-    position: absolute;
-    box-shadow: 0 5px 15px -5px rgba(0,0,0,.5);
+.handsontable.ht__manualColumnMove.on-moving--columns,
+.handsontable.ht__manualColumnMove.on-moving--columns thead th.ht__highlight {
+  cursor: move;
+  cursor: -moz-grabbing;
+  cursor: -webkit-grabbing;
+  cursor: grabbing;
 }
-
-.pika-lendar {
-    float: left;
-    width: 240px;
-    margin: 8px;
+.handsontable.ht__manualColumnMove.on-moving--columns .manualColumnResizer {
+  display: none;
 }
-
-.pika-title {
-    position: relative;
-    text-align: center;
+.handsontable .ht__manualColumnMove--guideline,
+.handsontable .ht__manualColumnMove--backlight {
+  position: absolute;
+  height: 100%;
+  display: none;
 }
-
-.pika-label {
-    display: inline-block;
-    *display: inline;
-    position: relative;
-    z-index: 9999;
-    overflow: hidden;
-    margin: 0;
-    padding: 5px 3px;
-    font-size: 14px;
-    line-height: 20px;
-    font-weight: bold;
-    background-color: #fff;
+.handsontable .ht__manualColumnMove--guideline {
+  background: #757575;
+  width: 2px;
+  top: 0;
+  margin-left: -1px;
+  z-index: 105;
 }
-.pika-title select {
-    cursor: pointer;
-    position: absolute;
-    z-index: 9998;
-    margin: 0;
-    left: 0;
-    top: 5px;
-    filter: alpha(opacity=0);
-    opacity: 0;
+.handsontable .ht__manualColumnMove--backlight {
+  background: #343434;
+  background: rgba(52, 52, 52, 0.25);
+  display: none;
+  z-index: 105;
+  pointer-events: none;
 }
-
-.pika-prev,
-.pika-next {
-    display: block;
-    cursor: pointer;
-    position: relative;
-    outline: none;
-    border: 0;
-    padding: 0;
-    width: 20px;
-    height: 30px;
-    /* hide text using text-indent trick, using width value (it's enough) */
-    text-indent: 20px;
-    white-space: nowrap;
-    overflow: hidden;
-    background-color: transparent;
-    background-position: center center;
-    background-repeat: no-repeat;
-    background-size: 75% 75%;
-    opacity: .5;
-    *position: absolute;
-    *top: 0;
+.handsontable.on-moving--columns.show-ui .ht__manualColumnMove--guideline,
+.handsontable.on-moving--columns .ht__manualColumnMove--backlight {
+  display: block;
 }
-
-.pika-prev:hover,
-.pika-next:hover {
-    opacity: 1;
+.handsontable .wtHider {
+  position: relative;
 }
-
-.pika-prev,
-.is-rtl .pika-next {
-    float: left;
-    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAeCAYAAAAsEj5rAAAAUklEQVR42u3VMQoAIBADQf8Pgj+OD9hG2CtONJB2ymQkKe0HbwAP0xucDiQWARITIDEBEnMgMQ8S8+AqBIl6kKgHiXqQqAeJepBo/z38J/U0uAHlaBkBl9I4GwAAAABJRU5ErkJggg==');
-    *left: 0;
+.handsontable.ht__manualRowMove.after-selection--rows tbody th.ht__highlight {
+  cursor: move;
+  cursor: -moz-grab;
+  cursor: -webkit-grab;
+  cursor: grab;
 }
-
-.pika-next,
-.is-rtl .pika-prev {
-    float: right;
-    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAeCAYAAAAsEj5rAAAAU0lEQVR42u3VOwoAMAgE0dwfAnNjU26bYkBCFGwfiL9VVWoO+BJ4Gf3gtsEKKoFBNTCoCAYVwaAiGNQGMUHMkjGbgjk2mIONuXo0nC8XnCf1JXgArVIZAQh5TKYAAAAASUVORK5CYII=');
-    *right: 0;
+.handsontable.ht__manualRowMove.on-moving--rows,
+.handsontable.ht__manualRowMove.on-moving--rows tbody th.ht__highlight {
+  cursor: move;
+  cursor: -moz-grabbing;
+  cursor: -webkit-grabbing;
+  cursor: grabbing;
 }
-
-.pika-prev.is-disabled,
-.pika-next.is-disabled {
-    cursor: default;
-    opacity: .2;
+.handsontable.ht__manualRowMove.on-moving--rows .manualRowResizer {
+  display: none;
 }
-
-.pika-select {
-    display: inline-block;
-    *display: inline;
+.handsontable .ht__manualRowMove--guideline,
+.handsontable .ht__manualRowMove--backlight {
+  position: absolute;
+  width: 100%;
+  display: none;
 }
-
-.pika-table {
-    width: 100%;
-    border-collapse: collapse;
-    border-spacing: 0;
-    border: 0;
+.handsontable .ht__manualRowMove--guideline {
+  background: #757575;
+  height: 2px;
+  left: 0;
+  margin-top: -1px;
+  z-index: 105;
 }
-
-.pika-table th,
-.pika-table td {
-    width: 14.285714285714286%;
-    padding: 0;
+.handsontable .ht__manualRowMove--backlight {
+  background: #343434;
+  background: rgba(52, 52, 52, 0.25);
+  display: none;
+  z-index: 105;
+  pointer-events: none;
 }
-
-.pika-table th {
-    color: #999;
-    font-size: 12px;
-    line-height: 25px;
-    font-weight: bold;
-    text-align: center;
-}
-
-.pika-button {
-    cursor: pointer;
-    display: block;
-    box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    outline: none;
-    border: 0;
-    margin: 0;
-    width: 100%;
-    padding: 5px;
-    color: #666;
-    font-size: 12px;
-    line-height: 15px;
-    text-align: right;
-    background: #f5f5f5;
-}
-
-.pika-week {
-    font-size: 11px;
-    color: #999;
-}
-
-.is-today .pika-button {
-    color: #33aaff;
-    font-weight: bold;
-}
-
-.is-selected .pika-button {
-    color: #fff;
-    font-weight: bold;
-    background: #33aaff;
-    box-shadow: inset 0 1px 3px #178fe5;
-    border-radius: 3px;
-}
-
-.is-inrange .pika-button {
-    background: #D5E9F7;
-}
-
-.is-startrange .pika-button {
-    color: #fff;
-    background: #6CB31D;
-    box-shadow: none;
-    border-radius: 3px;
-}
-
-.is-endrange .pika-button {
-    color: #fff;
-    background: #33aaff;
-    box-shadow: none;
-    border-radius: 3px;
-}
-
-.is-disabled .pika-button {
-    pointer-events: none;
-    cursor: default;
-    color: #999;
-    opacity: .3;
-}
-
-.pika-button:hover {
-    color: #fff;
-    background: #ff8000;
-    box-shadow: none;
-    border-radius: 3px;
-}
-
-/* styling for abbr */
-.pika-table abbr {
-    border-bottom: none;
-    cursor: help;
+.handsontable.on-moving--rows.show-ui .ht__manualRowMove--guideline,
+.handsontable.on-moving--rows .ht__manualRowMove--backlight {
+  display: block;
 }
