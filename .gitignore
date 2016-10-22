@@ -1,6 +1,7 @@
 .classpath
 .project
 .settings/
+release.properties
 .idea/
 *.iml
 target/
