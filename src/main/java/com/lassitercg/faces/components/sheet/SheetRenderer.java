@@ -24,6 +24,7 @@ package com.lassitercg.faces.components.sheet;
 
 import com.lassitercg.faces.components.util.VarBuilder;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.primefaces.json.JSONArray;
 import org.primefaces.json.JSONException;
 import org.primefaces.json.JSONObject;
@@ -224,7 +225,7 @@ public class SheetRenderer extends Renderer {
      * @throws IOException
      */
     protected void encodeBadData(FacesContext context, Sheet sheet, WidgetBuilder wb) throws IOException {
-        wb.attr("errors", sheet.getBadDataValue());
+        wb.attr("errors", StringEscapeUtils.escapeEcmaScript(sheet.getBadDataValue()));
     }
 
     /**
