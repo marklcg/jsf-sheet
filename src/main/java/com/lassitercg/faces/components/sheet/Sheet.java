@@ -73,7 +73,7 @@ import com.lassitercg.faces.components.util.VarBuilder;
 		@ResourceDependency(library="primefaces", name="components.css"),
 		@ResourceDependency(library="primefaces", name="jquery/jquery.js"),
 		@ResourceDependency(library="primefaces", name="core.js"),
-		@ResourceDependency(library="primefaces", name="components.js")
+		@ResourceDependency(library="primefaces", name="components.js"),
 		@ResourceDependency(name = "handsontable.full.min.js", target = "head", library = "handsontable"),
 		@ResourceDependency(name = "sheet.js", target = "head", library = "handsontable"),
 		@ResourceDependency(name = "handsontable.full.min.css", target = "head", library = "handsontable"),
