@@ -460,3 +460,5 @@ public class Asset implements Serializable {
 }
 ```
 
+Sample source code leveraging the EE7 stack can be found here:
+https://github.com/marklcg/sheetdemo
