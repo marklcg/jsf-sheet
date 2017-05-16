@@ -1354,7 +1354,7 @@ public class Sheet extends UIInput implements ClientBehaviorHolder, EditableValu
 		}
 
 		if (restoredBadUpdates == null) {
-			badUpdates.clear();
+			getBadUpdates().clear();
 		} else {
 			badUpdates = (List<BadUpdate>) restoredBadUpdates;
 		}
