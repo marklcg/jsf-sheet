@@ -349,9 +349,13 @@ PrimeFaces.widget.Sheet = PrimeFaces.widget.BaseWidget.extend({
         $this.ht = $this.tableDiv.data('handsontable');
 
         // prevent column clicks from selecting entire column, we use it for sort
+        // We were seeing an issue with this change and how it affected the columnSelect ajax action
+        // so we needed to NOT enabled this behavior if the given sheet has the ajax function defined.
         // TODO may make this conditional on whether or not sorting is enabled
-        Handsontable.hooks.add('beforeOnCellMouseDown',
-            $this.handleHotBeforeOnCellMouseDown, $this.ht);
+        if (!($this.hasBehavior('columnSelect'))) {
+            Handsontable.hooks.add('beforeOnCellMouseDown',
+                    $this.handleHotBeforeOnCellMouseDown, $this.ht);
+        }
 
         // Check if data exist. If not insert No Records Found message
         if (options.data.length == 0) {
