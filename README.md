@@ -18,7 +18,7 @@ To use the component, add the following dependency to your maven project:
 <dependency>
     <groupId>com.lassitercg</groupId>
     <artifactId>jsf-sheet</artifactId>
-    <version>1.4</version>
+    <version>1.5</version>
 </dependency>
 ```
 
